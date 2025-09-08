@@ -1,0 +1,322 @@
+
+# twilkit
+
+A lightweight toolkit for everyday Python work:
+
+* **Validators** – clean, reusable descriptors for attribute validation
+* **Colors** – simple ANSI color formatting for terminal output
+* **Decorators** – exception handling and per-function logging
+* **FlexVar** – a flexible, chainable dict-like container with a pretty `__str__`
+
+---
+
+## Table of Contents
+
+* [Installation](#installation)
+* [Quick Start](#quick-start)
+* [API](#api)
+
+  * [Validators](#validators)
+  * [Colors](#colors)
+  * [Decorators](#decorators)
+  * [FlexVar](#flexvar)
+* [Mini Project: “User Registry” CLI](#mini-project-user-registry-cli)
+* [Contributing](#contributing)
+* [License](#license)
+
+---
+
+## Installation
+
+```bash
+pip install twilkit
+```
+
+> Supports Python 3.10+
+
+---
+
+## Quick Start
+
+```python
+from twilkit import validators, color, FlexVar, catch_exceptions, log_function
+
+class User:
+    name  = validators.StartWith("Mr ", "Ms ", "Dr ")
+    email = validators.EndsWith("@example.com", "@corp.local")
+    age   = validators.InBetween(0, 130)
+
+@catch_exceptions
+@log_function
+def create_profile(name, email, age):
+    u = User()
+    u.name = name
+    u.email = email
+    u.age = age
+    profile = FlexVar("Profile").add("name", name).add("email", email).add("age", age)
+    print(color("User created").green)
+    print(profile)
+    return profile
+
+create_profile("Dr Jane Doe", "jane@example.com", 34)
+```
+
+---
+
+## API
+
+### Validators
+
+Reusable data descriptors that enforce constraints on attributes when you set them.
+Import them via the grouped namespace or directly:
+
+```python
+from twilkit import validators
+# or:
+from twilkit import StartWith, EndsWith, MoreThan, LessThan, InBetween
+```
+
+#### `StartWith(*prefixes: str)`
+
+Validate that a string starts with any of the provided prefixes.
+
+```python
+class Person:
+    title = validators.StartWith("Mr ", "Ms ", "Dr ")
+
+p = Person()
+p.title = "Dr Alice"      # OK
+# p.title = "Alice"       # raises ValidationError
+```
+
+#### `EndsWith(*suffixes: str)`
+
+Validate that a string ends with any of the provided suffixes.
+
+```python
+class Account:
+    email = validators.EndsWith("@example.com", "@corp.local")
+
+a = Account()
+a.email = "dev@corp.local"  # OK
+# a.email = "dev@gmail.com" # raises ValidationError
+```
+
+#### `MoreThan(value: int | float)`
+
+Validate that a number is strictly greater than `value`.
+
+```python
+class Metrics:
+    height_cm = validators.MoreThan(0)
+
+m = Metrics()
+m.height_cm = 172  # OK
+# m.height_cm = 0  # raises ValidationError
+```
+
+#### `LessThan(value: int | float)`
+
+Validate that a number is strictly less than `value`.
+
+```python
+class Bio:
+    age = validators.LessThan(150)
+
+b = Bio()
+b.age = 42     # OK
+# b.age = 200  # raises ValidationError
+```
+
+#### `InBetween(minv: int | float, maxv: int | float)`
+
+Validate that `minv <= value <= maxv`.
+
+```python
+class Exam:
+    score = validators.InBetween(0, 100)
+
+e = Exam()
+e.score = 88    # OK
+# e.score = -5  # raises ValidationError
+```
+
+> All validators raise `twilkit.ValidationError` with a clear, colored message on failure.
+
+---
+
+### Colors
+
+Minimal ANSI color helpers for terminals.
+
+* `color(value)` → wraps the value and provides properties:
+
+  * `.red`, `.light_green`, `.green`, `.yellow`, `.blue`, `.light_blue`, `.magenta`, `.cyan`, `.black`, `.purple`, `.orange`
+* `Colors` enum → raw escape codes
+* `Cprint` class → underlying helper
+
+```python
+from twilkit import color, Colors
+
+print(color("Success").green)
+print(color("Warning").yellow)
+print(f"{Colors.RED.value}Error{Colors.RESET.value}")
+```
+
+---
+
+### Decorators
+
+#### `@catch_exceptions`
+
+Catch any exception, print a colored error (`<func> <error>`), return `None`.
+
+```python
+from twilkit import catch_exceptions, color
+
+@catch_exceptions
+def risky_div(a, b):
+    return a / b
+
+print(color("Result:").blue, risky_div(6, 3))  # 2.0
+risky_div(1, 0)  # Prints colored error, returns None
+```
+
+#### `@log_function`
+
+Log function start, arguments, return values, and exceptions to `<func_name>.log`.
+
+```python
+from twilkit import log_function
+
+@log_function
+def compute_total(prices):
+    return sum(prices)
+
+compute_total([10, 20, 30])  # Logs to compute_total.log
+```
+
+---
+
+### FlexVar
+
+A small, chainable dict-like container with a pretty string output.
+
+```python
+from twilkit import FlexVar
+
+cfg = (
+    FlexVar("Server Config")
+      .add("host", "localhost")
+      .add("port", 8080)
+      .update("port", 9090)
+)
+
+print(cfg["host"])  # "localhost"
+print(cfg.port)     # "9090"
+print(cfg)          # Pretty formatted block
+
+"host" in cfg       # True
+del cfg["port"]     # Remove key
+for key, val in cfg:
+    print(key, val)
+```
+
+Error behavior:
+
+* `.add(name, _)` → `KeyError` if attribute exists
+* `.update(name, _)` / `.remove(name)` → `KeyError` if missing
+* `.__getattr__(name)` → `AttributeError` if missing
+* `.__getitem__` / `.__delitem__` → `KeyError` if missing
+
+---
+
+## Mini Project: User Registry CLI
+
+Combining validators, colors, decorators, and FlexVar.
+
+```python
+# file: user_registry.py
+from twilkit import validators, color, log_function, catch_exceptions, FlexVar
+
+class User:
+    name  = validators.StartWith("Mr ", "Ms ", "Dr ")
+    email = validators.EndsWith("@example.com", "@corp.local")
+    age   = validators.InBetween(0, 130)
+
+    def __init__(self, name: str, email: str, age: int):
+        self.name = name
+        self.email = email
+        self.age = age
+
+class Registry:
+    def __init__(self):
+        self._db = []
+
+    @log_function
+    @catch_exceptions
+    def add_user(self, name: str, email: str, age: int):
+        user = User(name, email, age)
+        entry = (
+            FlexVar("User")
+            .add("name", user.name)
+            .add("email", user.email)
+            .add("age", user.age)
+        )
+        self._db.append(entry)
+        print(color("User added").green)
+        print(entry)
+        return entry
+
+    @log_function
+    def list_users(self):
+        if not self._db:
+            print(color("No users found").yellow)
+            return []
+        print(color(f"Total users: {len(self._db)}").cyan)
+        for i, entry in enumerate(self._db, start=1):
+            print(color(f"[{i}]").purple)
+            print(entry)
+        return list(self._db)
+
+    @log_function
+    @catch_exceptions
+    def update_email(self, index: int, new_email: str):
+        entry = self._db[index]
+        tmp = User(entry.name, new_email, entry.age)  # re-validation
+        entry["email"] = tmp.email
+        print(color("Email updated").light_green)
+        print(entry)
+        return entry
+
+if __name__ == "__main__":
+    reg = Registry()
+    reg.add_user("Dr Alice", "alice@example.com", 34)
+    reg.add_user("Ms Eve", "eve@gmail.com", 29)  # invalid -> ValidationError
+    reg.list_users()
+    reg.update_email(0, "alice@corp.local")
+    reg.list_users()
+```
+
+This demonstrates:
+
+* **Validation**: descriptors enforce constraints
+* **Colors**: feedback messages
+* **Logging**: each method logs to its own file
+* **FlexVar**: flexible, human-readable data storage
+
+---
+
+## Contributing
+
+* Issues and PRs are welcome.
+* Keep scope small, API tidy, docs clear.
+* Include tests for new features .
+
+---
+
+## License
+
+This project is licensed under the terms of the [MIT License](LICENSE).
+
+---
