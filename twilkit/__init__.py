@@ -71,8 +71,9 @@ from .core import (
     ValidationError,
     StartWith, EndsWith, MoreThan, LessThan, InBetween,
     catch_exceptions, log_function,
-    FlexVar,
+    FlexVar,OfType, OptionalOfType, MatchesRegex
 )
+from .extra_tools import Return, PyTxt ,copy_this_module
 
 from types import SimpleNamespace
 
@@ -83,6 +84,9 @@ validators = SimpleNamespace(
     MoreThan=MoreThan,
     LessThan=LessThan,
     InBetween=InBetween,
+    OfType=OfType,
+    OptionalOfType=OptionalOfType,
+    MatchesRegex=MatchesRegex,
 )
 
 __all__ = [
@@ -90,11 +94,18 @@ __all__ = [
     "validators",
     # validators also available at top-level
     "ValidationError",
-    "StartWith", "EndsWith", "MoreThan", "LessThan", "InBetween",
+    "StartWith", "EndsWith", "MoreThan", "LessThan", "InBetween","OfType", "OptionalOfType" ,    "MatchesRegex",
+
     # colors and helpers
     "Colors", "Cprint", "color",
     # decorators
     "catch_exceptions", "log_function",
     # dynamic container
     "FlexVar",
+    "Return","PyTxt","copy_this_module"
 ]
+
+# Re-exports: extra tools
+from .extra_tools.core import PyTxt, Return, copy_this_module, copy_me_print
+
+__all__ = [*globals().get('__all__', []), 'PyTxt', 'Return', 'copy_this_module', 'copy_me_print']

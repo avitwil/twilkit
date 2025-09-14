@@ -2,6 +2,8 @@ from enum import Enum
 from functools import wraps
 from typing import Callable, Any, Iterable
 import logging
+import re
+
 
 # ---------- Colors / helpers ----------
 
@@ -759,3 +761,210 @@ class FlexVar:
             pass
         """
         return iter(self.__attr.items())
+
+class OfType:
+    """
+    Data descriptor that validates an attribute is an instance of one (or more)
+    specific Python types.
+
+    Validation rule
+    ----------------
+    `isinstance(value, types) == True`
+
+    Parameters
+    ----------
+    *types : type
+        One or more Python types (e.g., `int`, `float`, `str`, custom classes).
+
+    Examples
+    --------
+    class Config:
+        port = OfType(int)
+        ratio = OfType(int, float)     # allow either int or float
+        name = OfType(str)
+
+    c = Config()
+    c.port = 8080        # OK
+    c.ratio = 0.75       # OK (float allowed)
+    # c.port = "8080"    # raises ValidationError: must be of type int
+    # c.name = 123       # raises ValidationError: must be of type str
+
+    Raises
+    ------
+    ValidationError
+        If the assigned value is not an instance of any of the allowed types.
+    """
+
+    def __init__(self, *types: type):
+        if not types:
+            raise TypeError("OfType requires at least one type")
+        self.types = types
+
+    def __set_name__(self, owner, name):
+        self.name = f"__{name}"
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return getattr(instance, self.name, None)
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.types):
+            # build a friendly list of expected type names
+            type_names = tuple(t.__name__ for t in self.types)
+            raise ValidationError(self.name.lstrip("__"), *type_names, msg="must be of type")
+        setattr(instance, self.name, value)
+
+
+class OptionalOfType:
+    """
+    Data descriptor that validates an attribute is either `None` or an instance
+    of one (or more) specific Python types.
+
+    Validation rule
+    ----------------
+    `value is None or isinstance(value, types) == True`
+
+    Parameters
+    ----------
+    *types : type
+        One or more Python types (e.g., `str`, `int`, custom classes).
+
+    Examples
+    --------
+    class Profile:
+        nickname = OptionalOfType(str)     # str or None
+        score    = OptionalOfType(int, float)
+
+    p = Profile()
+    p.nickname = None      # OK
+    p.nickname = "Avi"     # OK
+    p.score = 100          # OK
+    p.score = 99.5         # OK
+    # p.score = "100"      # raises ValidationError: must be of type int or float
+
+    Raises
+    ------
+    ValidationError
+        If the assigned value is not None and not an instance of the allowed types.
+    """
+
+    def __init__(self, *types: type):
+        if not types:
+            raise TypeError("OptionalOfType requires at least one type")
+        self.types = types
+
+    def __set_name__(self, owner, name):
+        self.name = f"__{name}"
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return getattr(instance, self.name, None)
+
+    def __set__(self, instance, value):
+        if value is not None and not isinstance(value, self.types):
+            type_names = tuple(t.__name__ for t in self.types)
+            raise ValidationError(self.name.lstrip("__"), *type_names, msg="must be of type or None")
+        setattr(instance, self.name, value)
+
+
+class MatchesRegex:
+    """
+    Data descriptor that validates a string against a regular expression (full match).
+
+    Validation rule
+    ----------------
+    `pattern.fullmatch(value) is not None`
+
+    Parameters
+    ----------
+    pattern : str | Pattern[str]
+        A regular-expression pattern string (compiled with re.compile) or an
+        already compiled regex object. If a plain string is provided, it is
+        compiled with `re.compile(pattern)` without flags.
+
+    Notes
+    -----
+    - Uses `fullmatch`, not `search`, to ensure the entire value conforms.
+    - For case-insensitive matches or other behaviors, pre-compile your pattern
+      with flags and pass the compiled object:
+        `MatchesRegex(re.compile(r"^abc$", re.IGNORECASE))`
+
+    Examples
+    --------
+    Email (simple)
+    --------------
+    class User:
+        email = MatchesRegex(r"^[\\w\\.-]+@[\\w\\.-]+\\.[A-Za-z]{2,}$")
+
+    u = User()
+    u.email = "alice@example.com"    # valid
+    # u.email = "bad-email"          # raises ValidationError
+
+    Israeli phone
+    -------------
+    class Contact:
+        phone = MatchesRegex(r"^05\\d-\\d{7}$")  # e.g., 052-1234567
+
+    c = Contact()
+    c.phone = "052-1234567"          # valid
+    # c.phone = "12345"              # raises ValidationError
+
+    Username (3–15, letters/digits/_)
+    ----------------------------------
+    class Account:
+        username = MatchesRegex(r"^[A-Za-z0-9_]{3,15}$")
+
+    a = Account()
+    a.username = "avi_twil"          # valid
+    # a.username = "a!"              # raises ValidationError
+
+    Strong-ish password (example policy)
+    ------------------------------------
+    # at least 8 chars, one upper, one lower, one digit
+    pwd_re = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
+
+    class Secret:
+        password = MatchesRegex(pwd_re)
+
+    s = Secret()
+    s.password = "Aa123456"          # valid
+    # s.password = "password"        # raises ValidationError
+
+    Raises
+    ------
+    ValidationError
+        If the assigned value fails to fully match the given pattern.
+    TypeError
+        If a non-string value is assigned (this descriptor validates strings).
+    """
+
+    def __init__(self, pattern: str | re.Pattern[str]):
+        if isinstance(pattern, str):
+            self.pattern = re.compile(pattern)
+        elif isinstance(pattern, re.Pattern):
+            self.pattern = pattern
+        else:
+            raise TypeError("pattern must be a str or compiled regex (re.Pattern)")
+        self._pattern_str = getattr(self.pattern, "pattern", str(pattern))
+
+    def __set_name__(self, owner, name):
+        self.name = f"__{name}"
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return getattr(instance, self.name, None)
+
+    def __set__(self, instance, value: str):
+        if not isinstance(value, str):
+            raise TypeError(f"{self.name.lstrip('__')} must be a string")
+        if self.pattern.fullmatch(value) is None:
+            raise ValidationError(
+                self.name.lstrip("__"),
+                self._pattern_str,
+                msg="must match regex"
+            )
+        setattr(instance, self.name, value)
+
