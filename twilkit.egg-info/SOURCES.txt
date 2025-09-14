@@ -8,5 +8,12 @@ twilkit.egg-info/SOURCES.txt
 twilkit.egg-info/dependency_links.txt
 twilkit.egg-info/requires.txt
 twilkit.egg-info/top_level.txt
+twilkit/ADVfile_manager/__init__.py
+twilkit/ADVfile_manager/core.py
 twilkit/extra_tools/__init__.py
 twilkit/extra_tools/core.py
+twilkit/pyproj_inspector/__init__.py
+twilkit/pyproj_inspector/build_utils.py
+twilkit/pyproj_inspector/cli.py
+twilkit/pyproj_inspector/inspector.py
+twilkit/pyproj_inspector/packaging_utils.py

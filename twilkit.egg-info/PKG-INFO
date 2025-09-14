@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: twilkit
-Version: 1.1.3
+Version: 2.0.0
 Summary: Lightweight Python toolkit: validators, colors, decorators, and FlexVar
 Author: Avi Twil
 License: MIT License
@@ -42,7 +42,6 @@ Classifier: Topic :: Utilities
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: ADVfile-manager>=1.3.1
 Provides-Extra: extra-tools
 Requires-Dist: ADVfile-manager>=1.3.1; extra == "extra-tools"
 Dynamic: license-file
@@ -64,21 +63,24 @@ A lightweight toolkit for everyday Python work:
 * [Installation](#installation)
 * [Quick Start](#quick-start)
 * [API](#api)
-
   * [Validators](#validators)
     * [Start with](#startwithprefixes-str)
     * [End with](#endswithsuffixes-str)
     * [In between](#inbetweenminv-int--float-maxv-int--float)
     * [Less than](#lessthanvalue-int--float)
     * [More than](#morethanvalue-int--float)
-  * [Colors](#colors)
-  * [Decorators](#decorators)
-    * [Catch Execptions](#catch_exceptions)
-    * [Log Function](#log_function)
-  * [FlexVar](#flexvar)
-  * [Return](#return)
-  * [PyTxt](#pytxt)
-  * [Copy helper function](#copy-helpers)
+    * [Colors](#colors)
+    * [Decorators](#decorators)
+      * [Catch Execptions](#catch_exceptions)
+      * [Log Function](#log_function)
+    * [FlexVar](#flexvar)
+    * [Extra Tools new features from version 1.1.3](#extra-tools-pytxt-return-copy-helpers)
+      * [Return](#return)
+      * [PyTxt](#pytxt)
+      * [Copy helper function](#copy-helpers)
+* [Version 2.0 is here](#-version-200-)
+  * [ADVfile_manager](#advfile_manager)
+  * [pyproj_inspector](#pyproj_inspector)
 * [Mini Project: “User Registry” CLI](#mini-project-user-registry-cli)
 * [Contributing](#contributing)
 * [License](#license)
@@ -434,7 +436,7 @@ This project is licensed under the terms of the [MIT License](LICENSE).
 
 ## Extra Tools (PyTxt, Return, Copy helpers)
 
-> **New in 1.1.0** – Utility helpers under `twilkit.extra_tools` and re-exported at the top level.
+> **New in 1.1.3** – Utility helpers under `twilkit.extra_tools` and re-exported at the top level.
 
 [back to menu](#table-of-contents)
 
@@ -502,3 +504,136 @@ Parameters:
 
 
 ---
+
+# Version 2.0.0 
+
+
+### pyproj_inspector
+**Repo:** [https://github.com/avitwil/pyproj_inspector](https://github.com/avitwil/pyproj_inspector)
+
+`pyproj_inspector` ingests either a **single Python file** or a **project directory**, parses all `.py` files, and builds a structured view of your codebase:
+
+- Built-in (stdlib) imports
+- External imports (PyPI distributions mapped from import names)
+- Internal modules (top-level packages/modules contained in your project)
+- A map of `relative_path -> source_code` for every file
+- An optional entry script when a single file is analyzed
+
+It also ships with utilities to:
+
+- Materialize the analyzed project into a temporary or target directory
+- Create binaries via **PyInstaller** or **Nuitka**
+- Generate a ready-to-edit **`pyproject.toml`** for packaging to PyPI
+- Build a Debian `.deb` package (when `dpkg-deb` is available)
+
+>Utility Analyze a Python script or project, classify imports, reconstruct sources, and quickly package into distributables.
+```python
+from twilkit.pyproj_inspector import PythonProject
+
+proj = PythonProject("path/to/app.py")
+print(proj.result.builtins)         # {'os', 'json', ...}
+print(proj.result.external_imports) # {'requests': {'requests'}, ...}
+print(proj.result.internal_modules) # {'app'}
+print(proj.result.entry_relpath)    # 'app.py'
+
+```
+[pyproj_inspector](./pyproj_inspector_README.md)
+
+[back to menu](#table-of-contents)
+
+
+---
+
+
+### ADVfile_manager
+**Repo:** [https://github.com/avitwil/ADVfile\_manager](https://github.com/avitwil/ADVfile_manager)
+
+Unified file abstractions for Python with **safe writes, caching, backups, context managers, and exit-time cleanup** — all under a consistent API for **Text**, **JSON**, **CSV**, **YAML**, **INI**, **TOML**, **XML**, and **Excel** files. Includes **unified search** across formats and **async variants** of all classes.
+
+* `TextFile` – read/write/append; line tools: `lines()`, `read_line()`.
+* `JsonFile` – dict/list roots, `append()`, `get_item()`, `items()`.
+* `CsvFile` – `DictReader`/`DictWriter`, `read_row()`, `rows()`, column order control.
+* `YamlFile` – like `JsonFile` (requires `PyYAML`).
+* `IniFile` – INI via `configparser`, dict-like write/append, search by section/key/value.
+* `TomlFile` – TOML read/write/append (requires `tomli`/`tomli-w` or `tomllib`).
+* `XmlFile` – XML via `xml.etree.ElementTree`, append elements, search by tag/attrs/text.
+* `ExcelFile` – Excel via `openpyxl`, header-based rows, multi-sheet support.
+
+The base class `File` adds **backups**, **restore**, **retention helpers**, **human-readable sizes**, **cache control**, a **context manager** that can auto-backup & restore on error, and **exit-time cleanup** for ephemeral backups. Each class implements a **unified `search()`** signature tailored to the format. Async wrappers (`ATextFile`, `AJsonFile`, …) expose `aread/awrite/aappend/asearch` and async context management.
+
+
+```python
+from twilkit.ADVfile_manager import  File, TextFile, JsonFile, CsvFile, YamlFile,IniFile, TomlFile, XmlFile, ExcelFile
+# Text
+txt = TextFile("notes.txt", "data")
+txt.write("first line")
+txt.append("second line")
+print(txt.read_line(2))     # "second line"
+for i, line in txt.lines():
+    print(i, line)
+
+# JSON (dict root)
+j = JsonFile("config.json", "data")
+j.write({"users": [{"id": 1}]})
+j.append({"active": True})
+print(j.get_item("active")) # True
+
+# CSV
+c = CsvFile("table.csv", "data")
+c.write([{"name":"Avi","age":30},{"name":"Dana","age":25}], fieldnames=["name","age"])
+c.append({"name":"Noa","age":21})
+print(c.read_row(2))        # {"name":"Dana","age":"25"}
+for idx, row in c.rows():
+    print(idx, row)
+
+# YAML
+y = YamlFile("config.yaml", "data")
+y.write({"app":{"name":"demo"}, "features":["a"]})
+y.append({"features":["b"]})
+print(y.get_item("app"))
+
+# INI
+ini = IniFile("settings.ini", "data")
+ini.write({"server": {"host": "127.0.0.1", "port": 8000}})
+ini.append({"server": {"debug": "true"}, "auth": {"enabled": "yes"}})
+cfg = ini.read()
+print(cfg["server"]["host"])
+
+# TOML
+toml = TomlFile("config.toml", "data")
+toml.write({"app": {"name": "demo"}, "features": {"b": True}})
+print(toml.read()["app"]["name"])
+toml.append({"features": {"c": 123}})
+
+# XML
+
+xmlf = XmlFile("books.xml", "data")
+root = ET.Element("books")
+root.append(ET.Element("book", attrib={"id": "1"}))
+xmlf.write(root)
+
+# Append another
+xmlf.append(ET.Element("book", attrib={"id": "2"}))
+print(ET.tostring(xmlf.read(), encoding="unicode"))
+
+# EXEL
+
+xl = ExcelFile("report.xlsx", "data", default_sheet="Sheet1")
+xl.write([{"name":"Avi","score":95},{"name":"Dana","score":88}])
+xl.append({"name":"Noa","score":92})
+rows = xl.read()
+print(rows[0]["name"])
+
+
+
+```
+[README](./ADVfile_manager_README.md)
+
+[Usage Guide](./ADVfile_manager_USAGE.md)
+
+[back to menu](#table-of-contents)
+
+
+---
+
+

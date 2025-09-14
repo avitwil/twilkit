@@ -109,3 +109,44 @@ __all__ = [
 from .extra_tools.core import PyTxt, Return, copy_this_module
 
 __all__ = [*globals().get('__all__', []), 'PyTxt', 'Return', 'copy_this_module']
+
+from .ADVfile_manager import  (
+    # Base + sync classes
+    File, TextFile, JsonFile, CsvFile, YamlFile,
+    IniFile, TomlFile, XmlFile, ExcelFile,
+
+    # Async classes
+    ATextFile, AJsonFile, ACsvFile, AYamlFile,
+    AIniFile, ATomlFile, AXmlFile, AExcelFile,
+
+    # Utilities
+    set_exit_cleanup, cleanup_backups_for_all,
+)
+from .pyproj_inspector import PythonProject, ProjectParseResult, build_utils, packaging_utils
+create_binary = build_utils.create_binary
+create_pypi_package = packaging_utils.create_pypi_package
+create_debian_package = packaging_utils.create_debian_package
+
+__all__ = [*globals().get('__all__', []),"PythonProject",
+    "ProjectParseResult",
+    "create_binary",
+    "create_pypi_package",
+    "create_debian_package",
+    # Base
+    "File",
+
+    # Sync classes
+    "TextFile", "JsonFile", "CsvFile", "YamlFile",
+    "IniFile", "TomlFile", "XmlFile", "ExcelFile",
+
+    # Async classes
+    "ATextFile", "AJsonFile", "ACsvFile", "AYamlFile",
+    "AIniFile", "ATomlFile", "AXmlFile", "AExcelFile",
+
+    # Utils
+    "set_exit_cleanup", "cleanup_backups_for_all",
+           ]
+
+__author__ = "Avi Twil"
+__version__ = "2.0.0"
+__license__ = "MIT"
