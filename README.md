@@ -17,9 +17,19 @@ A lightweight toolkit for everyday Python work:
 * [API](#api)
 
   * [Validators](#validators)
+    * [Start with](#startwithprefixes-str)
+    * [End with](#endswithsuffixes-str)
+    * [In between](#inbetweenminv-int--float-maxv-int--float)
+    * [Less than](#lessthanvalue-int--float)
+    * [More than](#morethanvalue-int--float)
   * [Colors](#colors)
   * [Decorators](#decorators)
+    * [Catch Execptions](#catch_exceptions)
+    * [Log Function](#log_function)
   * [FlexVar](#flexvar)
+  * [Return](#return)
+  * [PyTxt](#pytxt)
+  * [Copy helper function](#copy-helpers)
 * [Mini Project: “User Registry” CLI](#mini-project-user-registry-cli)
 * [Contributing](#contributing)
 * [License](#license)
@@ -31,6 +41,10 @@ A lightweight toolkit for everyday Python work:
 ```bash
 pip install twilkit
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 > Supports Python 3.10+
 
@@ -60,6 +74,8 @@ def create_profile(name, email, age):
 
 create_profile("Dr Jane Doe", "jane@example.com", 34)
 ```
+[back to menu](#table-of-contents)
+
 
 ---
 
@@ -75,6 +91,10 @@ from twilkit import validators
 # or:
 from twilkit import StartWith, EndsWith, MoreThan, LessThan, InBetween
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 #### `StartWith(*prefixes: str)`
 
@@ -88,6 +108,10 @@ p = Person()
 p.title = "Dr Alice"      # OK
 # p.title = "Alice"       # raises ValidationError
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 #### `EndsWith(*suffixes: str)`
 
@@ -101,6 +125,10 @@ a = Account()
 a.email = "dev@corp.local"  # OK
 # a.email = "dev@gmail.com" # raises ValidationError
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 #### `MoreThan(value: int | float)`
 
@@ -114,6 +142,10 @@ m = Metrics()
 m.height_cm = 172  # OK
 # m.height_cm = 0  # raises ValidationError
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 #### `LessThan(value: int | float)`
 
@@ -127,6 +159,10 @@ b = Bio()
 b.age = 42     # OK
 # b.age = 200  # raises ValidationError
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 #### `InBetween(minv: int | float, maxv: int | float)`
 
@@ -140,6 +176,10 @@ e = Exam()
 e.score = 88    # OK
 # e.score = -5  # raises ValidationError
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 > All validators raise `twilkit.ValidationError` with a clear, colored message on failure.
 
@@ -162,8 +202,12 @@ print(color("Success").green)
 print(color("Warning").yellow)
 print(f"{Colors.RED.value}Error{Colors.RESET.value}")
 ```
+[back to menu](#table-of-contents)
+
 
 ---
+
+
 
 ### Decorators
 
@@ -181,6 +225,10 @@ def risky_div(a, b):
 print(color("Result:").blue, risky_div(6, 3))  # 2.0
 risky_div(1, 0)  # Prints colored error, returns None
 ```
+[back to menu](#table-of-contents)
+
+
+---
 
 #### `@log_function`
 
@@ -195,8 +243,12 @@ def compute_total(prices):
 
 compute_total([10, 20, 30])  # Logs to compute_total.log
 ```
+[back to menu](#table-of-contents)
+
 
 ---
+
+
 
 ### FlexVar
 
@@ -229,7 +281,11 @@ Error behavior:
 * `.__getattr__(name)` → `AttributeError` if missing
 * `.__getitem__` / `.__delitem__` → `KeyError` if missing
 
+[back to menu](#table-of-contents)
+
+
 ---
+
 
 ## Mini Project: User Registry CLI
 
@@ -305,6 +361,9 @@ This demonstrates:
 * **Logging**: each method logs to its own file
 * **FlexVar**: flexible, human-readable data storage
 
+[back to menu](#table-of-contents)
+
+
 ---
 
 ## Contributing
@@ -319,11 +378,19 @@ This demonstrates:
 
 This project is licensed under the terms of the [MIT License](LICENSE).
 
+[back to menu](#table-of-contents)
+
+
 ---
 
 ## Extra Tools (PyTxt, Return, Copy helpers)
 
 > **New in 1.1.0** – Utility helpers under `twilkit.extra_tools` and re-exported at the top level.
+
+[back to menu](#table-of-contents)
+
+
+---
 
 ### PyTxt
 A lightweight text/file wrapper that lets you work with an in-memory buffer or a bound file (via `ADVfile_manager.TextFile`).
@@ -339,6 +406,11 @@ Key notes:
 - Assigning `.file = <path>` auto-creates a `TextFile` using basename/dirname.
 - Deleting `del p.file` pulls content back into memory and removes the file on disk.
 
+[back to menu](#table-of-contents)
+
+
+---
+
 ### Return
 A tiny “result” object for returning a payload + success/error state.
 
@@ -353,6 +425,11 @@ A tiny “result” object for returning a payload + success/error state.
 
 Conveniences: `.ok` (alias for `success`), `.dict()`, `.unwrap(key, default)`, and `.raise_for_error()`.
 
+[back to menu](#table-of-contents)
+
+
+---
+
 ### Copy helpers
 Create a counted copy of a Python module with a header and optional removal of the `__main__` block.
 
@@ -360,15 +437,19 @@ Create a counted copy of a Python module with a header and optional removal of t
     res = copy_this_module("backups", new_name="final.py", include_main=False)
     print("Created:", res["file_name"], "at", res["file_path"])
 
+
+
 Parameters:
 - `new_copy_file_path`: target folder.
 - `copy_num`: start index for numbering; if the target exists, numbering auto-increments.
 - `new_name`: optional output file name (suffix optional; source suffix is inherited if missing).
 - `include_main`: keep or remove the `if __name__ == '__main__':` block in the copy.
 
-A convenience printing wrapper is also available:
 
-    from twilkit import copy_me_print
-    copy_me_print(path="backups", new_name="final.py", keep_main=False)
 
 > These helpers rely on **ADVfile_manager** for safe file operations. Install with extras: `pip install twilkit[extra_tools]`.
+
+[back to menu](#table-of-contents)
+
+
+---
