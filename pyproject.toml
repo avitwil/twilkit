@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twilkit"
-version = "2.0.0"
+version = "2.0.1"
 description = "Lightweight Python toolkit: validators, colors, decorators, and FlexVar"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -36,4 +36,10 @@ Issues = "https://github.com/avitwil/twilkit/issues"
 
 
 [project.optional-dependencies]
-extra_tools = ["ADVfile-manager>=1.3.1"]
+# NOTE: twilkit.extra_tools now imports the ADVfile_manager copy bundled
+# inside twilkit itself (a frozen vendored snapshot, currently v1.1.0 -
+# see twilkit/ADVfile_manager/__init__.py) via a relative import, so this
+# extra is no longer required for `twilkit.extra_tools` to work. It is
+# kept as an opt-in way to also install the actively-maintained standalone
+# ADVfile_manager package from PyPI if you want it for other purposes.
+extra_tools = ["ADVfile-manager>=1.1.0"]

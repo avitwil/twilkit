@@ -5,7 +5,13 @@ import os
 import pathlib
 import re
 from typing import Any, Optional, Dict
-from ADVfile_manager import TextFile
+# NOTE: ADVfile_manager is a sibling package under twilkit/ (not nested inside
+# extra_tools/), so this needs two dots, not one: from ..ADVfile_manager.
+# This relative import (instead of the old absolute `from ADVfile_manager
+# import TextFile`) uses the bundled/vendored copy that ships inside twilkit
+# itself, so `pip install twilkit` works without also installing the
+# `[extra_tools]` extra or the standalone ADVfile_manager PyPI package.
+from ..ADVfile_manager import TextFile
 
 
 class PyTxt:
@@ -225,7 +231,7 @@ class Return:
 
 
 def copy_this_module(
-    new_copy_file_path: str=os.getcwd(),
+    new_copy_file_path: str | None = None,
     copy_num: int = 0,
     *,
     new_name: str | None = None,
@@ -280,18 +286,21 @@ def copy_this_module(
     """
     frame = inspect.stack()[1]
     src_path = os.path.abspath(frame.filename)
+    new_copy_file_path = new_copy_file_path or os.getcwd()
     # Source is read-only; destination must be writeable during creation.
     this = PyTxt(read_only=True)
     copy = PyTxt()
 
-    # Resolve stem/suffix
+    # Resolve stem/suffix from the *caller's* file (frame.filename), not
+    # this module's own __file__ - otherwise every copy would be named
+    # "core.<suffix>" regardless of which module actually called this.
     if new_name is None:
-        stem = pathlib.Path(__file__).stem
-        suffix = pathlib.Path(__file__).suffix
+        stem = pathlib.Path(frame.filename).stem
+        suffix = pathlib.Path(frame.filename).suffix
     else:
         p = pathlib.Path(new_name)
         stem = p.stem
-        suffix = p.suffix or pathlib.Path(__file__).suffix  # inherit if missing
+        suffix = p.suffix or pathlib.Path(frame.filename).suffix  # inherit if missing
 
     # Initial candidate path
     if copy_num > 0:
@@ -353,19 +362,20 @@ except RuntimeError as e:
     )
 
 
-def _copy_me_print(*, path: str = os.getcwd(), new_name: str | None = None, keep_main: bool = True) -> None:
+def _copy_me_print(*, path: str | None = None, new_name: str | None = None, keep_main: bool = True) -> None:
     """
     Convenience wrapper that copies this module and prints a colored summary to stdout.
 
     Parameters
     ----------
-    path : str, default CWD
+    path : str | None, default None (resolved to CWD at call time)
         Target directory for the copy.
     new_name : str | None
         Optional explicit file name for the copy (suffix optional; inherited if missing).
     keep_main : bool, default True
         Whether to keep the `if __name__ == '__main__':` block in the copy.
     """
+    path = path or os.getcwd()
     res = copy_this_module(path, new_name=new_name, include_main=keep_main)
 
     print()

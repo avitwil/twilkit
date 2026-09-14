@@ -1,6 +1,12 @@
 
-# ADVfile_manager — Usage Guide (v1.3.0)
+# ADVfile_manager — Usage Guide (v1.1.0)
 
+> **Note:** The `ADVfile_manager` copy bundled inside `twilkit` (at
+> `twilkit/ADVfile_manager/`) is a frozen, vendored snapshot at v1.1.0 and
+> does not automatically track newer releases of the standalone
+> [`ADVfile_manager`](https://github.com/avitwil/ADVfile_manager) PyPI
+> package. Some features described below may reflect the standalone
+> package's later versions rather than exactly what ships inside twilkit.
 
 **Author:** Avi Twil
 **Repo:** [https://github.com/avitwil/ADVfile\_manager](https://github.com/avitwil/ADVfile_manager)
@@ -84,7 +90,7 @@ Unified file abstractions for Python with **safe I/O patterns**, **in-memory cac
 15. [Backups, Restore & Context Safety — Deep Dive](#backups-restore--context-safety--deep-dive)
 16. [Global Utilities](#global-utilities)
 17. [Unified `search(...)` Cheatsheet](#unified-search-cheatsheet)
-18. [Installation (v1.3.0)](#installation-v130)
+18. [Installation (v1.1.0)](#installation-v110)
 19. [Comparison Tables](#comparison-tables)
     - [ADVfile_manager vs. Popular Libraries](#advfile_manager-vs-popular-libraries)
     - [ADVfile_manager vs. Your ATmulti_file_handler](#advfile_manager-vs-your-atmulti_file_handler-hypothetical-prior-tool)
@@ -131,7 +137,7 @@ Python **3.8+** recommended.
 
 ### <a id="comparison-vs-atmulti_file_handler"></a>ADVfile\_manager vs. **ATmulti\_file\_handler** (my other tool)
 
-| Area                                   | **ADVfile\_manager 1.3.0**                             | **ATmulti\_file\_handler**       |
+| Area                                   | **ADVfile\_manager 1.1.0**                             | **ATmulti\_file\_handler**       |
 | -------------------------------------- | ------------------------------------------------------ | -------------------------------- |
 | Unified search across formats          | **Yes** (`search()` signature works everywhere)        | Partial/Absent                   |
 | Async (`A*` classes)                   | **Yes** (`aread/awrite/aappend/asearch`, `async with`) | Partial/Absent                   |
@@ -1932,7 +1938,7 @@ search(
 
 ---
 
-# Installation (v1.3.0)
+# Installation (v1.1.0)
 
 **Base install (core formats: Text/JSON/CSV/INI/XML):**
 
@@ -2004,7 +2010,7 @@ pip install pytest pytest-asyncio
 
 ## ADVfile\_manager vs. *Your* `ATmulti_file_handler` (hypothetical prior tool)
 
-| Area                      | **ADVfile\_manager (1.3.0)**                 | ATmulti\_file\_handler                       |
+| Area                      | **ADVfile\_manager (1.1.0)**                 | ATmulti\_file\_handler                       |
 | ------------------------- | -------------------------------------------- | -------------------------------------------- |
 | Formats                   | Text, JSON, CSV, YAML, INI, TOML, XML, Excel | Typically fewer formats (often no Excel/XML) |
 | Unified search            | ✅ single signature across all                | ❌/Partial (per-format helpers)               |

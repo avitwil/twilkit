@@ -148,5 +148,5 @@ __all__ = [*globals().get('__all__', []),"PythonProject",
            ]
 
 __author__ = "Avi Twil"
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 __license__ = "MIT"
